@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'summary1.dart'; // SummaryPage 임포트
+import 'login.dart';
 
 class LandingPage extends StatelessWidget {
   @override
@@ -115,7 +115,7 @@ class LandingPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SummaryPage1(),
+                            builder: (context) => LoginPage(),
                           ),
                         );
                       },
