@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'emotion_data.dart';
 import 'alarm.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class MainPage1 extends StatefulWidget {
   final int currentPage;
@@ -13,6 +15,28 @@ class MainPage1 extends StatefulWidget {
 
 class _MainPage1State extends State<MainPage1> {
   bool _isDropdownVisible = false;
+  List<Map<String, dynamic>> _emotionData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEmotionData();
+  }
+
+  Future<void> _loadEmotionData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedData = prefs.getString('emotionData');
+
+    if (storedData != null) {
+      setState(() {
+        _emotionData = List<Map<String, dynamic>>.from(json.decode(storedData));
+      });
+    } else {
+      setState(() {
+        _emotionData = emotionData; // 초기 데이터 사용
+      });
+    }
+  }
 
   void _toggleDropdown() {
     setState(() {
@@ -22,7 +46,7 @@ class _MainPage1State extends State<MainPage1> {
 
   @override
   Widget build(BuildContext context) {
-    final highestDay = _getHighestEmotionDay(emotionData, 'happy');
+    final highestDay = _getHighestEmotionDay(_emotionData, 'happy');
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -156,14 +180,14 @@ class _MainPage1State extends State<MainPage1> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.end,
                                         children: List.generate(
-                                            emotionData.length, (index) {
-                                          final dateData = emotionData[index];
+                                            _emotionData.length, (index) {
+                                          final dateData = _emotionData[index];
                                           return _buildBar(
                                             _getWeekdayLabel(dateData['date']),
                                             dateData['happy'].toInt(),
                                             dateData['happy'] ==
                                                 _getHighestValue(
-                                                    emotionData, 'happy'),
+                                                    _emotionData, 'happy'),
                                             100,
                                           );
                                         }),

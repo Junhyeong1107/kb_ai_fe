@@ -1,5 +1,7 @@
-// emotion_data.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 List<Map<String, dynamic>> emotionData = [
   {
@@ -45,6 +47,41 @@ List<Map<String, dynamic>> emotionData = [
     'unrest': 42.0
   }
 ];
+
+Future<void> initializeEmotionData() async {
+  final prefs = await SharedPreferences.getInstance();
+  final storedData = prefs.getString('emotionData');
+
+  if (storedData != null) {
+    // 기존에 저장된 데이터가 있으면 그것을 사용
+    emotionData = List<Map<String, dynamic>>.from(json.decode(storedData));
+  } else {
+    // 처음 로그인 시에는 기본 데이터를 사용하고, 이를 저장
+    await prefs.setString('emotionData', json.encode(emotionData));
+  }
+}
+
+Future<void> fetchEmotionDataFromServer() async {
+  final url = Uri.parse('http://43.200.7.249:8080/getEmotionData');
+
+  try {
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+      emotionData = data.map((item) => item as Map<String, dynamic>).toList();
+
+      // 새로운 데이터를 SharedPreferences에 저장
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('emotionData', json.encode(emotionData));
+
+      print('Emotion data received and stored: $emotionData');
+    } else {
+      print('Failed to load emotion data. Status code: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error fetching emotion data: $e');
+  }
+}
 
 String getDominantEmotion() {
   double totalAnger = 0;
